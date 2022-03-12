@@ -60,7 +60,7 @@ public class Downloader {
     }
 
     private static String saveDirectory = "." + File.separator;
-    
+
     public static Document downloadHTML(String url) {
         //create connection
         Connection connect = Jsoup.connect(url);

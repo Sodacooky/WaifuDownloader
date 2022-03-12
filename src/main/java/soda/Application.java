@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class Application {
 
@@ -60,68 +60,83 @@ public class Application {
 
     private static void downloadAllPicture(List<String> urls) {
         System.out.println("开始下载图片");
-        //multithreading
-        final int[] downloadedCount = {0};
-        ExecutorService pictureDownloadService = Executors.newFixedThreadPool(8);
+
+        //thread pool
+        ExecutorService pictureDownloadService = Executors.newFixedThreadPool(4);
         for (String url : urls) {
+            //submit task
             pictureDownloadService.submit(() -> {
-                Downloader.downloadToFile(url);
-                //progress
-                synchronized (downloadedCount) {
-                    downloadedCount[0]++;
-                    for (int i = 0; i != 32; i++) System.out.print("\b");
-                    System.out.printf("%d / %d", downloadedCount[0], urls.size());
+                //download
+                if (!Downloader.downloadToFile(url)) {
+                    System.out.println("失败 " + url);
                 }
             });
         }
+
         //wait
         pictureDownloadService.shutdown();
         try {
-            pictureDownloadService.awaitTermination(99, TimeUnit.DAYS);
+            boolean keepWaiting = true;
+            while (keepWaiting) {
+                Thread.sleep(1000);
+                if (pictureDownloadService.isTerminated()) keepWaiting = false;
+                for (int i = 0; i != 32; i++) System.out.print('\b');
+                System.out.printf("%d / %d", ((ThreadPoolExecutor) pictureDownloadService).getCompletedTaskCount(), urls.size());
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
         //finished
         System.out.println();
         System.out.println("图片下载结束");
     }
 
     private static List<String> fetchAllPictureUrls(int startPage, int endPage, List<String> tags) {
+        System.out.println("开始获取图片链接");
+
         //get preview page url
         List<String> pageUrls = PreviewPageUrlGenerator.generate(startPage, endPage, tags);
-        //result
+        //result urls
         List<String> downloadUrls = new ArrayList<>();
-        //get preview page content
-        //multithreading
-        final Boolean[] keepDownloading = {true};
-        final int[] downloadedPage = {0};
-        System.out.println("开始获取图片链接");
-        ExecutorService pageDownloadService = Executors.newFixedThreadPool(32);
-        for (String pageUrl : pageUrls) {
-            //当到达了没有图片的页时，尽快结束
-            if (!keepDownloading[0]) break;
-            //task
-            pageDownloadService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    List<String> urls = DownloadUrlExtractor.extract(Downloader.downloadHTML(pageUrl));
-                    if (urls.size() == 0) keepDownloading[0] = false;
-                    else {
-                        downloadUrls.addAll(urls);
-                        //progress
-                        synchronized (downloadedPage) {
-                            downloadedPage[0]++;
-                            for (int i = 0; i != 32; i++) System.out.print("\b");
-                            System.out.printf("%d / %d", downloadedPage[0], endPage - startPage + 1);
-                        }
+
+        //downloading control
+        final boolean[] keepDownloading = {true};
+        //thread pool
+        ExecutorService pageDownloadService = Executors.newFixedThreadPool(16);
+        for (String url : pageUrls) {
+            //task submit
+            pageDownloadService.submit(() -> {
+                //try control
+                synchronized (keepDownloading) {
+                    if (!keepDownloading[0]) return;
+                }
+                //fetch
+                List<String> urls = DownloadUrlExtractor.extract(Downloader.downloadHTML(url));
+                //check whether it should keep downloading
+                synchronized (keepDownloading) {
+                    //if no url exists, reached the end
+                    if (urls.size() == 0) {
+                        keepDownloading[0] = false;
+                        return;
                     }
+                    //or append fetched urls
+                    downloadUrls.addAll(urls);
                 }
             });
         }
         //wait
         pageDownloadService.shutdown();
         try {
-            pageDownloadService.awaitTermination(1, TimeUnit.DAYS);
+            boolean keepWaiting = true;
+            while (keepWaiting) {
+                Thread.sleep(250);
+                if (pageDownloadService.isTerminated()) keepWaiting = false;
+                for (int i = 0; i != 32; i++) System.out.print('\b');
+                System.out.printf("%d / %d", ((ThreadPoolExecutor) pageDownloadService).getCompletedTaskCount(), pageUrls.size());
+            }
+            for (int i = 0; i != 32; i++) System.out.print('\b');
+            System.out.printf("成功下载 %d 页的图片链接\n", (int) Math.ceil(downloadUrls.size() / 40.));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
