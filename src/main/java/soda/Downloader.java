@@ -88,11 +88,12 @@ public class Downloader {
             String fullPath = saveDirectory
                     + FilenameUtils
                     .getName(URLDecoder.decode(urlObject.getPath(), "UTF-8"))
-                    .replaceAll("[\\\\/:*?<>|]", " ");
+                    .replaceAll("[\\\\/:*\"!?<>|]", " ");
             //save
             FileOutputStream fileOutputStream = new FileOutputStream(fullPath);
             IOUtils.copy(inputStream, fileOutputStream);
             fileOutputStream.close();
+            inputStream.close();
             //
             return true;
         } catch (IOException e) {

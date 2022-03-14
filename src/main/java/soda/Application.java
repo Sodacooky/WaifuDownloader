@@ -12,8 +12,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class Application {
 
     public static void main(String[] args) {
-        //args processing
-        argsProcessing(Arrays.asList(args));
+        //read configuration
+        ConfigurationContent configuration = configurationFileProcess();
+        //set configuration file's proxy
+        if (configuration.isEnableProxy()) {
+            Downloader.setProxyAddress(configuration.getProxyAddress());
+            Downloader.setProxyPort(configuration.getProxyPort());
+        }
 
         //user prompt input
         List<String> tags = userInputTags();
@@ -29,7 +34,7 @@ public class Application {
 
         //get picture urls
         System.out.println("正在获取从页" + startPage + "到页" + endPage + "共" + (endPage - startPage + 1));
-        List<String> urls = fetchAllPictureUrls(startPage, endPage, tags);
+        List<String> urls = fetchAllPictureUrls(startPage, endPage, tags, configuration);
 
         //create directory
         Downloader.setSaveDirectory("." + File.separator + tags.get(0));
@@ -37,32 +42,20 @@ public class Application {
         if (!dir.exists()) dir.mkdir();
 
         //download pictures
-        downloadAllPicture(urls);
+        downloadAllPicture(urls, configuration);
     }
 
-    private static void argsProcessing(List<String> args) {
-        if (args.contains("--help")) {
-            System.out.println("--enableProxy 启用代理，默认127.0.0.1:1080");
-            System.out.println("--proxyAddr <addr> 设置代理地址，addr地址无需协议前缀切只支持http代理");
-            System.out.println("--proxyPort <port> 设置代理的端口");
-            System.exit(0);
-        }
-        if (args.contains("--enableProxy")) Downloader.setEnableProxy(true);
-        if (args.contains("--proxyAddr")) {
-            int index = args.indexOf("--proxyAddr");
-            Downloader.setProxyAddress(args.get(index + 1));
-        }
-        if (args.contains("--proxyPort")) {
-            int index = args.indexOf("--proxyPort");
-            Downloader.setProxyPort(Integer.parseInt(args.get(index + 1)));
-        }
+    private static ConfigurationContent configurationFileProcess() {
+        Configuration configuration = new Configuration();
+        configuration.TryReadFromFile();
+        return configuration.getContent();
     }
 
-    private static void downloadAllPicture(List<String> urls) {
+    private static void downloadAllPicture(List<String> urls, ConfigurationContent configuration) {
         System.out.println("开始下载图片");
 
         //thread pool
-        ExecutorService pictureDownloadService = Executors.newFixedThreadPool(4);
+        ExecutorService pictureDownloadService = Executors.newFixedThreadPool(configuration.getPictureDownloadThreadAmount());
         for (String url : urls) {
             //submit task
             pictureDownloadService.submit(() -> {
@@ -92,7 +85,7 @@ public class Application {
         System.out.println("图片下载结束");
     }
 
-    private static List<String> fetchAllPictureUrls(int startPage, int endPage, List<String> tags) {
+    private static List<String> fetchAllPictureUrls(int startPage, int endPage, List<String> tags, ConfigurationContent configuration) {
         System.out.println("开始获取图片链接");
 
         //get preview page url
@@ -103,7 +96,7 @@ public class Application {
         //downloading control
         final boolean[] keepDownloading = {true};
         //thread pool
-        ExecutorService pageDownloadService = Executors.newFixedThreadPool(16);
+        ExecutorService pageDownloadService = Executors.newFixedThreadPool(configuration.getUrlFetchThreadAmount());
         for (String url : pageUrls) {
             //task submit
             pageDownloadService.submit(() -> {
