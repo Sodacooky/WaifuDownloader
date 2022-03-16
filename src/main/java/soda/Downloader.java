@@ -24,6 +24,10 @@ public class Downloader {
     //不需要协议前缀，直接写上"127.0.0.1"或"www.my-proxy.com"
     //HTTP only
     public static void setProxyAddress(String proxyAddress) {
+        //尝试去掉协议
+        if (proxyAddress.startsWith("http")) {
+            proxyAddress = proxyAddress.substring(proxyAddress.indexOf("://") + 3);
+        }
         Downloader.proxyAddress = proxyAddress;
     }
 

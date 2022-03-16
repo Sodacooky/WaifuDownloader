@@ -12,13 +12,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class Application {
 
     public static void main(String[] args) {
-        //read configuration
-        ConfigurationContent configuration = configurationFileProcess();
-        //set configuration file's proxy
-        if (configuration.isEnableProxy()) {
-            Downloader.setProxyAddress(configuration.getProxyAddress());
-            Downloader.setProxyPort(configuration.getProxyPort());
-        }
+        //process configuration
+        DownloadingConfiguration configuration = processConfiguration();
 
         //user prompt input
         List<String> tags = userInputTags();
@@ -28,7 +23,7 @@ public class Application {
 
         //check tags
         if (tags.size() == 0) {
-            System.out.println("以外的0个tags输入");
+            System.out.println("意外的0个tags输入");
             System.exit(-1);
         }
 
@@ -45,13 +40,31 @@ public class Application {
         downloadAllPicture(urls, configuration);
     }
 
-    private static ConfigurationContent configurationFileProcess() {
-        Configuration configuration = new Configuration();
-        configuration.TryReadFromFile();
-        return configuration.getContent();
+    //处理配置文件
+    private static DownloadingConfiguration processConfiguration() {
+        DownloadingConfigurationProcessor downloadingConfigurationProcessor = new DownloadingConfigurationProcessor();
+        downloadingConfigurationProcessor.TryReadFromFile();
+        DownloadingConfiguration content = downloadingConfigurationProcessor.getContent();
+        //set proxy
+        if (content.isEnableProxy()) {
+            Downloader.setEnableProxy(true);
+            Downloader.setProxyAddress(content.getProxyAddress());
+            Downloader.setProxyPort(content.getProxyPort());
+        }
+        //print configuration
+        System.out.println("当前配置文件:");
+        System.out.println("链接获取线程数: " + content.getUrlFetchThreadAmount());
+        System.out.println("图片下载线程数: " + content.getPictureDownloadThreadAmount());
+        System.out.println("是否优先下载原图: " + content.isDownloadOriginal());
+        if (content.isEnableProxy()) {
+            System.out.println("将使用http代理: (http://)" + content.getProxyAddress() + ":" + content.getProxyPort());
+        }
+        //return it
+        return content;
     }
 
-    private static void downloadAllPicture(List<String> urls, ConfigurationContent configuration) {
+    //下载图片
+    private static void downloadAllPicture(List<String> urls, DownloadingConfiguration configuration) {
         System.out.println("开始下载图片");
 
         //thread pool
@@ -85,7 +98,8 @@ public class Application {
         System.out.println("图片下载结束");
     }
 
-    private static List<String> fetchAllPictureUrls(int startPage, int endPage, List<String> tags, ConfigurationContent configuration) {
+    //获取图片链接
+    private static List<String> fetchAllPictureUrls(int startPage, int endPage, List<String> tags, DownloadingConfiguration configuration) {
         System.out.println("开始获取图片链接");
 
         //get preview page url
@@ -105,7 +119,7 @@ public class Application {
                     if (!keepDownloading[0]) return;
                 }
                 //fetch
-                List<String> urls = DownloadUrlExtractor.extract(Downloader.downloadHTML(url));
+                List<String> urls = new PictureUrlsFetcher(url, configuration).doFetch();
                 //check whether it should keep downloading
                 synchronized (keepDownloading) {
                     //if no url exists, reached the end
