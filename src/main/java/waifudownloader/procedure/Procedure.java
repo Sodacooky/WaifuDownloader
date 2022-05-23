@@ -7,7 +7,7 @@ import waifudownloader.core.HtmlDownloader;
 import java.util.List;
 
 //抽象的、基础的下载流程
-abstract public class BaseProcedure {
+abstract public class Procedure {
 
     //检测输入的标签数量是否满足指定网站的需求
     abstract public boolean isTagsAmountAvailable();
@@ -20,9 +20,9 @@ abstract public class BaseProcedure {
 
     //打印下载内容相关提示
     public void printDownloadInfo() {
-        Logger logger = LoggerFactory.getLogger(BaseProcedure.class);
+        Logger logger = LoggerFactory.getLogger(Procedure.class);
         logger.warn("It's going to download from page {} to {},", pageStart, pageEnd);
-        logger.warn("totally {} pages,", pageEnd - pageStart + 1);
+        logger.warn("total {} pages,", pageEnd - pageStart + 1);
         logger.warn("of tags {}.", tags);
     }
 
@@ -40,7 +40,7 @@ abstract public class BaseProcedure {
     protected int pageStart, pageEnd;//[start,end]
     protected HtmlDownloader htmlDownloader;
 
-    public BaseProcedure(List<String> tags, int pageStart, int pageEnd, HtmlDownloader htmlDownloader) {
+    public Procedure(List<String> tags, int pageStart, int pageEnd, HtmlDownloader htmlDownloader) {
         this.tags = tags;
         this.pageStart = pageStart;
         this.pageEnd = pageEnd;

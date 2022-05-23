@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DanbooruProcedure extends BaseProcedure {
+public class DanbooruProcedure extends Procedure {
 
     @Override
     public boolean isTagsAmountAvailable() {

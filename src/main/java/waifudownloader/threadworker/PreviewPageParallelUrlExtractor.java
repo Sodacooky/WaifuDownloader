@@ -2,7 +2,7 @@ package waifudownloader.threadworker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import waifudownloader.procedure.BaseProcedure;
+import waifudownloader.procedure.Procedure;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 //以预览页为多线程基础的多线程下载链接提取器
-public class PreviewPageParallelUrlExtractor {
+public class PreviewPageParallelUrlExtractor extends UrlExtractor {
 
     //main method
     public List<String> run() {
@@ -68,7 +68,7 @@ public class PreviewPageParallelUrlExtractor {
                 //message
                 finishedTask++;
                 LoggerFactory.getLogger(PreviewPageParallelUrlExtractor.class)
-                        .info("\t {}/{} Extracted {} urls.", finishedTask, totalTask, pictureUrls);
+                        .info("\t {}/{} Extracted {} urls.", finishedTask, totalTask, pictureUrls.size());
             } catch (ExecutionException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -76,14 +76,10 @@ public class PreviewPageParallelUrlExtractor {
         }
     }
 
-    public PreviewPageParallelUrlExtractor(BaseProcedure procedure) {
-        this.procedure = procedure;
+    public PreviewPageParallelUrlExtractor(Procedure procedure) {
+        super(procedure);
     }
 
-    //procedure
-    private BaseProcedure procedure;
     //task future
     private List<Future<List<String>>> taskFuture = new ArrayList<>();
-    //result picture url
-    private List<String> pictureUrls = new ArrayList<>();
 }

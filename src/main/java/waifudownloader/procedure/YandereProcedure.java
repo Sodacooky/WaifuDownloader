@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class YandereProcedure extends BaseProcedure {
+public class YandereProcedure extends Procedure {
 
     @Override
     public boolean isTagsAmountAvailable() {
