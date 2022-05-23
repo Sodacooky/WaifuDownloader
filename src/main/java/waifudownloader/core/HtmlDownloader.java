@@ -23,11 +23,7 @@ public class HtmlDownloader {
             if (httpProxyAddr != null && httpProxyAddr.length() > 1) {
                 if (httpProxyPort != 0) {
                     connection.proxy(httpProxyAddr, httpProxyPort);
-                } else {
-                    logger.warn("HTTP Proxy Port Ignored.");
                 }
-            } else {
-                logger.warn("HTTP Proxy Address Ignored.");
             }
             //get document and return it
             return connection.get();

@@ -22,25 +22,30 @@ public class FileDownloader {
         try {
             //use jsoup build the connection
             Connection connection = HttpConnection.connect(url);
-            connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36 Edg/101.0.1210.39");
-            connection.ignoreContentType(true);
+            connection.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36 Edg/101.0.1210.39")
+                    .ignoreContentType(true)
+                    .maxBodySize(0);
             //set connection proxy
             if (httpProxyAddr != null && httpProxyAddr.length() > 1) {
                 if (httpProxyPort != 0) {
                     connection.proxy(httpProxyAddr, httpProxyPort);
-                } else {
-                    logger.warn("HTTP Proxy Port Ignored.");
                 }
-            } else {
-                logger.warn("HTTP Proxy Address Ignored.");
             }
+            //try to remove url params from some websites
+            String baseName = FilenameUtils.getBaseName(url);
+            String extension = FilenameUtils.getExtension(url);
+            extension = extension.substring(0, extension.indexOf("?"));
+            String fullPath = baseName + "." + extension;
             //create file
-            File toSaveFile = new File(saveDirectory, FilenameUtils.getName(url).replaceAll("[\\\\/:*\"!?<>|]", " "));
+            File toSaveFile = new File(saveDirectory, fullPath.replaceAll("[\\\\/:*\"!?<>|]", " "));
             if (!toSaveFile.createNewFile()) {
                 logger.warn("Covering a existing file: " + toSaveFile.getName());
             }
             //do download
-            IOUtils.write(connection.execute().bodyAsBytes(), new FileOutputStream(toSaveFile));
+            FileOutputStream fileOutputStream = new FileOutputStream(toSaveFile);
+            connection.execute();
+            IOUtils.write(connection.execute().bodyAsBytes(), fileOutputStream);
+            fileOutputStream.close();
             //report file size
             return toSaveFile.length();
         } catch (IOException e) {
