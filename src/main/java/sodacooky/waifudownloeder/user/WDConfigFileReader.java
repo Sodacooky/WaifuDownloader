@@ -1,6 +1,8 @@
 package sodacooky.waifudownloeder.user;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
@@ -39,6 +41,13 @@ public class WDConfigFileReader {
         try {
             config = objectMapper.readValue(configFile, WDConfig.class);
         } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        //print config content
+        try {
+            Logger logger = LoggerFactory.getLogger(WDConfigFileReader.class);
+            logger.info("Successfully read the config:\n{}", objectMapper.writeValueAsString(config));
+        } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
         //

@@ -48,6 +48,7 @@ public class ProcedureBuilder {
      */
     public boolean setTags(List<String> tags) {
         if (tags.size() > tempProcedure.getTagsAmountUpperBound()) return false;
+        if (tags.size() == 0) return false;
         this.tags = tags;
         return true;
     }
@@ -60,6 +61,7 @@ public class ProcedureBuilder {
      * @return 返回false如果超过了限制页数，或错误的数值
      */
     public boolean setPageRange(int startPage, int endPage) {
+        if (startPage < 1) return false;
         if (endPage < startPage) return false;
         if (endPage > tempProcedure.getPageRageUpperBound()) return false;
         this.startPage = startPage;

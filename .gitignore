@@ -32,3 +32,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### debug file ###
+config.json
+hakurei_reimu*/

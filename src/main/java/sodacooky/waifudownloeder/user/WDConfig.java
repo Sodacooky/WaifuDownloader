@@ -25,4 +25,6 @@ public class WDConfig {
     public String proxyAddress = "127.0.0.1";
     //代理端口
     public int proxyPort = 1080;
+    //尽可能下载原图？
+    public boolean preferOriginal = false;
 }

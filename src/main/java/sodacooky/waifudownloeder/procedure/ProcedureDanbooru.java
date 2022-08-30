@@ -69,9 +69,9 @@ public class ProcedureDanbooru implements IProcedure {
         Document document = procedureAsset.getHtmlDownloader().download(postPageUrl);
         //extract
         //only have original picture
-        return document.select("#post-option-download > a").attr("abs:href");
+        String downloadUrl = document.select("#post-option-download > a").attr("abs:href");
         //with download=1 param
         //remove the "download" param
-        //return url.substring(0, url.indexOf("?"));
+        return downloadUrl.substring(0, downloadUrl.indexOf("?"));
     }
 }
