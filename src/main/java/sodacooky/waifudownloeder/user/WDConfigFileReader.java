@@ -46,7 +46,7 @@ public class WDConfigFileReader {
         //print config content
         try {
             Logger logger = LoggerFactory.getLogger(WDConfigFileReader.class);
-            logger.info("Successfully read the config:\n{}", objectMapper.writeValueAsString(config));
+            logger.info("Successfully read the config:\n{}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(config));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -61,17 +61,19 @@ public class WDConfigFileReader {
      */
     public static WDConfig createDefault() {
         WDConfig defaultConfig = new WDConfig();
+        ObjectMapper objectMapper = new ObjectMapper();
         //write
         try {
-            //warn
-            LoggerFactory.getLogger(WDConfigFileReader.class).warn("Going to write default configuration:\n");
             //try to create file
             File file = new File("config.json");
             if (file.exists()) throw new RuntimeException("There should not be file!");
             file.createNewFile();
+            //warn
+            LoggerFactory.getLogger(WDConfigFileReader.class)
+                    .warn("Going to write default configuration:\n{}\n",
+                            objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(defaultConfig));
             //write default settings to file
             FileWriter fileWriter = new FileWriter(file);
-            ObjectMapper objectMapper = new ObjectMapper();
             fileWriter.write(objectMapper.writeValueAsString(defaultConfig));//default
             fileWriter.close();
         } catch (IOException e) {

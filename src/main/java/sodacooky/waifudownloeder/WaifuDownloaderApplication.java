@@ -85,7 +85,10 @@ public class WaifuDownloaderApplication {
         });
         //等待
         try {
+            //你先别急
+            Thread.sleep(1000);
             executorService.shutdown();
+            //循环打印状态
             boolean keepWaiting = true;
             while (keepWaiting) {
                 //check tasks status
@@ -122,7 +125,10 @@ public class WaifuDownloaderApplication {
         });
         //wait
         try {
+            //你先别急
+            Thread.sleep(1000);
             executorService.shutdown();
+            //循环打印状态
             boolean keepWaiting = true;
             while (keepWaiting) {
                 //check tasks status
@@ -157,7 +163,10 @@ public class WaifuDownloaderApplication {
         }
         //wait
         try {
+            //你先别急
+            Thread.sleep(1000);
             executorService.shutdown();
+            //循环打印状态
             boolean keepWaiting = true;
             while (keepWaiting) {
                 //check tasks status

@@ -5,7 +5,6 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -14,7 +13,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 
 /**
  * 下载URL文件到本地工具
@@ -37,7 +35,6 @@ public class FileDownloader {
             //使用Java自带的下载工具而不是Jsoup的
             HttpClient.Builder builder = HttpClient.newBuilder();
             builder.followRedirects(HttpClient.Redirect.ALWAYS);
-            builder.connectTimeout(Duration.ofMinutes(4));
             //apply proxy
             if (proxy != null) builder.proxy(ProxySelector.of((InetSocketAddress) proxy.address()));
             //get client
@@ -47,13 +44,16 @@ public class FileDownloader {
             //download bytes
             HttpRequest request = HttpRequest.newBuilder().uri(new URI(url)).build();
             HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
-            BufferedInputStream bufferedInputStream = new BufferedInputStream(response.body());
             //transfer
-            IOUtils.write(bufferedInputStream.readAllBytes(), new FileOutputStream(new File(saveDirectory, extractFilename(url))));
+            Thread.sleep(1000);
+            IOUtils.write(response.body().readAllBytes(), new FileOutputStream(new File(saveDirectory, extractFilename(url))));
             //finish
         } catch (Exception e) {
-            logger.error("\nFailed: {}", url);
-            logger.error("ErrorMessage: {}", e.getMessage());
+            System.err.println();
+            logger.error("Failed: \n{}", url);
+            logger.error("ErrorMessage: \n{}", e.getMessage());
+            logger.error("Stack: ");
+            e.printStackTrace();
         }
     }
 
